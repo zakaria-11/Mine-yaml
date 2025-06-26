@@ -1,0 +1,218 @@
+proxy-providers:
+  AKUN:
+    url: "https://prod-test.jdevcloud.com/api/trojan?bug=quiz.vidio.com&tls=true&format=clash-provider&cdn=true&limit=10"
+    type: http
+    path: akunid.yaml
+#    filter: RU|SG|ID|JP|MY
+    interval: 3600
+    health-check: {enable: true,url: "https://www.gstatic.com/generate_204",interval: 300}
+  AKUN_2: 
+    url: "https://prod-test.jdevcloud.com/api/trojan?bug=quiz.vidio.com&tls=true&format=clash-provider&cdn=true&cc=sg&limit=4"
+    type: http
+    path: akunsg.yaml
+#    filter: RU|SG|ID|JP|MY
+    interval: 3600
+    health-check: {enable: true,url: "https://www.gstatic.com/generate_204",interval: 300}
+mixed-port: 2025
+ipv6: false
+mode: rule
+allow-lan: true
+find-process-mode: strict
+global-client-fingerprint: ios
+bind-address: "*"
+unified-delay: true
+profile:
+  store-selected: true
+  store-fake-ip: true
+dns:
+  enable: true
+  ipv6: false
+  use-host: true
+  enhanced-mode: fake-ip
+  listen: 0.0.0.0:7874
+  nameserver:
+    - "9.9.9.9"
+    - "tls://dns.nextdns.io"
+  default-nameserver:
+    - 4.2.2.5
+  fake-ip-range: 10.0.0.1/8
+  fake-ip-filter:
+    - "*.lan"
+    - "*.localhost"
+    - "*.test"
+    - "*.local"
+    # E-Wallet (4 Besar)
+    - "*.gopay.com"
+    - "*.dana.id"
+    - "*.ovo.id"
+    - "*.linkaja.id"
+    # XL Axiata (2 Domain Inti)
+    - "*.xl.co.id"
+    - "*.xlaxiata.co.id"
+    # E-Commerce (4 Teratas)
+    - "*.tokopedia.com"
+    - "*.shopee.co.id"
+    - "*.blibli.com"
+    - "*.bukalapak.com"
+    # YouTube + Optimasi
+    - "*.youtube.com"
+    - "*.googlevideo.com"  # CDN Video
+    - "*.ytimg.com"        # Thumbnail
+    - "*.youtu.be"         # Shortlink
+    - "*.googleapis.com"   # API YouTube
+    - "*.ggpht.com"        # Gambar/Logo
+proxies:
+- name: "wgcf"
+  type: wireguard
+  private-key: "aOsgLDRmt72WMIOhN7vx78tg957eYYmwUlIeNsHjumA="
+  server: engage.cloudflareclient.com
+  dialer-proxy: triman
+  port: 2408
+  ip: 172.16.0.2/32
+  ipv6: 2606:4700:110:82b3:a321:4c82:666:b340/128
+  public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
+  allowed-ips: ['0.0.0.0/0',"::/0"]
+#  reserved: [228,13,42]
+  ss: true
+  mtu: 1280
+- name: triman 
+  type: vless
+  #dialer-proxy: wgcf
+  server: quiz.vidio.com
+  port: 443
+  uuid: a4b52f20-573f-4fcd-b494-17b751e522a3
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  servername: top.globalxnet.xyz
+  network: ws
+  sni: top.globalxnet.xyz
+  ss: true
+  ws-opts:
+    path: /topglobal
+    headers:
+      Host: top.globalxnet.xyz
+proxy-groups:
+- name: INTERNET
+  type: select
+  include-all-providers: true
+  proxies: 
+  - LB
+  - BP 
+  - ss 
+- name: ss
+  hidden: true
+  type: select
+  proxies:
+  - triman
+  - wgcf
+- name: ADS
+  type: select
+  disable-ss: false
+  proxies:
+  - REJECT
+  - INTERNET
+  default: ["REJECT"]
+- name: BP
+  type: url-test
+  url: https://detectportal.firefox.com/success.txt
+  interval: 60
+  include-all-providers: true
+  disable-ss: true
+  hidden: true
+- name: LB
+  type: load-balance
+  interval: 60
+  strategy: consistent-hashing
+  use: ["AKUN_2"]
+#  include-all-providers: true
+#  filter: SG|RU|ID
+rules:
+- IP-CIDR,198.18.0.1/16,REJECT,no-resolve
+- RULE-SET,rule_personalads,ADS
+- RULE-SET,rule_basicads,ADS
+- RULE-SET,rule_hijacking,ADS
+- RULE-SET,rule_privacy,ADS
+- RULE-SET,youtube,ss
+- AND,((NETWORK,UDP),(DST-PORT,443),(RULE-SET,youtube)),REJECT
+- RULE-SET,telegram,LB
+- RULE-SET,telegram_ip,LB,no-resolve
+- MATCH,INTERNET
+#########_____######
+
+rule-anchor:
+  ip: &ip {type: http, interval: 86400, behavior: ipcidr, format: mrs}
+  domain: &domain {type: http, interval: 86400, behavior: domain, format: mrs}
+rule-providers:
+  rule_hijacking:
+    type: file
+    behavior: classical
+    path: "./rule_provider/rule_hijacking.yaml"
+    url: https://raw.githubusercontent.com/malikshi/open_clash/main/rule_provider/rule_hijacking.yaml
+  rule_privacy:
+    type: file
+    behavior: classical
+    url: https://raw.githubusercontent.com/malikshi/open_clash/main/rule_provider/rule_privacy.yaml
+    path: "./rule_provider/rule_privacy.yaml"
+  rule_basicads:
+    type: file
+    behavior: domain
+    url: https://raw.githubusercontent.com/malikshi/open_clash/main/rule_provider/rule_basicads.yaml
+    path: "./rule_provider/rule_basicads.yaml"
+  rule_personalads:
+    type: file
+    behavior: classical
+    url: https://raw.githubusercontent.com/malikshi/open_clash/main/rule_provider/rule_personalads.yaml
+    path: "./rule_provider/rule_personalads.yaml"
+  AWAvenue-Ads:
+    <<: *domain
+    path: ./rule_providers/AWAvenue-Ads.mrs
+    url: "https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash.mrs"
+  private:
+    <<: *domain
+    path: ./rule_providers/private.mrs
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs"
+  private_ip:
+    <<: *ip
+    path: ./rule_providers/private_ip.mrs
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/private.mrs"
+  ai:
+    <<: *domain
+    path: ./rule_providers/ai.mrs
+    url: "https://raw.githubusercontent.com/JohnsonRan/CRules/mihomo/rules/AIs_merged.mrs"
+  telegram:
+    <<: *domain
+    path: ./rule_providers/telegram.mrs
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs"
+  telegram_ip:
+    <<: *ip
+    path: ./rule_providers/telegram_ip.mrs
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/telegram.mrs"
+  github:
+    <<: *domain
+    path: ./rule_providers/github.mrs
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs"
+  twitter:
+    <<: *domain
+    path: ./rule_providers/twitter.mrs
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/twitter.mrs"
+  youtube:
+    <<: *domain
+    path: ./rule_providers/youtube.mrs
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs"
+  google:
+    <<: *domain
+    path: ./rule_providers/google.mrs
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs"
+  gfw:
+    <<: *domain
+    path: ./rule_providers/gfw.mrs
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/gfw.mrs"
+  cn:
+    <<: *domain
+    path: ./rule_providers/cn.mrs
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs"
+  cn_ip:
+    <<: *ip
+    path: ./rule_providers/cn_ip.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/cnip.mrs"
