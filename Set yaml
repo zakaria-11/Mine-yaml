@@ -176,7 +176,7 @@ rules:
 - GEOIP,netflix,ID
 - GEOSITE,rule-streaming,LB
 - GEOSITE,rule-sosmed,LB
-- GEOIP,facebook,PB
+- GEOIP,facebook,BP
 - GEOIP,twitter,LB
 - GEOIP,telegram,LB
 - GEOSITE,videoconference,LB
