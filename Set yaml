@@ -1,6 +1,6 @@
 proxy-providers:
   AKUN:
-    url: "https://prod-test.jdevcloud.com/api/trojan?bug=quiz.vidio.com&tls=true&format=clash-provider&cdn=true&limit=10"
+    url: "https://prod-test.jdevcloud.com/api/trojan?bug=quiz.vidio.com&tls=true&format=clash-provider&cdn=true&limit=10&cc=id"
     type: http
     path: akunid.yaml
 #    filter: RU|SG|ID|JP|MY
@@ -142,7 +142,6 @@ proxy-groups:
   - wgcf
 - name: ADS
   type: select
-  disable-ss: false
   proxies:
   - REJECT
   - INTERNET
@@ -152,8 +151,11 @@ proxy-groups:
   url: https://detectportal.firefox.com/success.txt
   interval: 60
   include-all-providers: true
-  disable-ss: true
   hidden: true
+- name: ID
+  type: url-test
+  interval: 60
+  use: ["AKUN"]
 - name: LB
   type: load-balance
   interval: 60
@@ -162,12 +164,29 @@ proxy-groups:
 #  include-all-providers: true
 #  filter: SG|RU|ID
 rules:
+- GEOSITE,rule-malicious,REJECT
+- GEOSITE,oisd-full,ADS
+- GEOSITE,rule-ads,ADS
+- GEOSITE,oisd-nsfw,ADS
+- GEOSITE,category-porn,ADS
+- RULE-SET,rule_direct,DIRECT
+- GEOSITE,rule-umum,BP
+#Zerotier
+- OR,((GEOSITE,rule-umum),(DST-PORT,9993/29994/40775/43215)),BP
+- GEOSITE,rule-indo,ID
+- GEOIP,netflix,ID
+- GEOSITE,rule-streaming,LB
+- GEOSITE,rule-sosmed,LB
+- GEOIP,facebook,PB
+- GEOIP,twitter,LB
+- GEOIP,telegram,LB
+- GEOSITE,videoconference,LB
 - IP-CIDR,198.18.0.1/16,REJECT,no-resolve
 - RULE-SET,rule_personalads,ADS
 - RULE-SET,rule_basicads,ADS
 - RULE-SET,rule_hijacking,ADS
 - RULE-SET,rule_privacy,ADS
-- RULE-SET,youtube,ss
+- RULE-SET,youtube,LB
 - AND,((NETWORK,UDP),(DST-PORT,443),(RULE-SET,youtube)),REJECT
 - RULE-SET,telegram,LB
 - RULE-SET,telegram_ip,LB,no-resolve
