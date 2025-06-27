@@ -169,7 +169,6 @@ rules:
 - GEOSITE,rule-ads,ADS
 - GEOSITE,oisd-nsfw,ADS
 - GEOSITE,category-porn,ADS
-- RULE-SET,rule_direct,DIRECT
 - GEOSITE,rule-umum,BP
 #Zerotier
 - OR,((GEOSITE,rule-umum),(DST-PORT,9993/29994/40775/43215)),BP
