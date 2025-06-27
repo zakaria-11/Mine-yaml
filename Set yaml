@@ -165,7 +165,7 @@ proxy-groups:
 #  filter: SG|RU|ID
 rules:
 - IP-CIDR,198.18.0.1/16,REJECT,no-resolve
-- GEOSITE:rule-speedtest,LB
+- geosite:rule-speedtest,LB
 - RULE-SET,rule_personalads,ADS
 - RULE-SET,rule_basicads,ADS
 - RULE-SET,rule_hijacking,ADS
